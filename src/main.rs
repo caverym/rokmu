@@ -45,8 +45,13 @@ fn build(app: &Application) {
     select_button.connect_clicked(clone!(@weak ip => move |_| {
         post(SendInput::Select, ip);
     }));
+    let back_button = gtk::Button::with_label("Back");
+    back_button.connect_clicked(clone!(@weak ip => move |_| {
+        post(SendInput::Back, ip);
+    }));
     hshbox.append(&home_button);
     hshbox.append(&select_button);
+    hshbox.append(&back_button);
     vbox.append(&hshbox);
     
 
@@ -73,6 +78,24 @@ fn build(app: &Application) {
     abox.append(&right_button);
     vbox.append(&abox);
 
+    let volbox = gtk::Box::builder().orientation(gtk::Orientation::Horizontal).build();
+    let vol_up_button = gtk::Button::with_label("Volume Up");
+    vol_up_button.connect_clicked(clone!(@weak ip => move |_| {
+        post(SendInput::VolumeUp, ip);
+    }));
+    let vol_down_button = gtk::Button::with_label("Volume Down");
+    vol_down_button.connect_clicked(clone!(@weak ip => move |_| {
+        post(SendInput::VolumeDown, ip);
+    }));
+    let mute_button = gtk::Button::with_label("Mute");
+    mute_button.connect_clicked(clone!(@weak ip => move |_| {
+        post(SendInput::VolumeMute, ip);
+    }));
+    abox.append(&vol_up_button);
+    abox.append(&vol_down_button);
+    abox.append(&mute_button);
+    vbox.append(&volbox);
+
     let window = ApplicationWindow::builder()
         .application(app)
         .title("Rokmu")
@@ -86,10 +109,14 @@ fn build(app: &Application) {
 enum SendInput {
     Home,
     Select,
+    Back,
     Up,
     Down,
     Left,
     Right,
+    VolumeUp,
+    VolumeDown,
+    VolumeMute,
 }
 
 fn post(input: SendInput, res: Rc<Mutex<GString>>) {
