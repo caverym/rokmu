@@ -91,9 +91,9 @@ fn build(app: &Application) {
     mute_button.connect_clicked(clone!(@weak ip => move |_| {
         post(SendInput::VolumeMute, ip);
     }));
-    abox.append(&vol_up_button);
-    abox.append(&vol_down_button);
-    abox.append(&mute_button);
+    volbox.append(&vol_up_button);
+    volbox.append(&vol_down_button);
+    volbox.append(&mute_button);
     vbox.append(&volbox);
 
     let window = ApplicationWindow::builder()
