@@ -1,8 +1,10 @@
+use gtk::MessageDialog;
+use gtk::Window;
 use gtk4 as gtk;
+use std::fmt::Display;
 use std::io::Read;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::thread;
 // use gtk::prelude::*;
 use libadwaita::prelude::*;
 
@@ -20,6 +22,20 @@ macro_rules! post {
             eprintln!("error: {}", e);
         }
     };
+}
+
+fn connection_error_dialog(parent: Option<&impl IsA<Window>>, error: String) {
+    let dialog = gtk::MessageDialog::new(parent, gtk::DialogFlags::MODAL, gtk::MessageType::Error, gtk::ButtonsType::None, &error);
+    // dialog.connect("response", true, clone!(@strong dialog => move |_| { dialog.destroy(); None }));
+    dialog.present();
+    // dialog.destroy();
+}
+
+fn connection_load_dialog(parent: Option<&impl IsA<Window>>) -> MessageDialog {
+    let dialog = gtk::MessageDialog::new(parent, gtk::DialogFlags::MODAL, gtk::MessageType::Info, gtk::ButtonsType::None, "Loading...");
+    // dialog.connect("response", true, clone!(@strong dialog => move |_| { dialog.destroy(); None }));
+    dialog.present();
+    dialog
 }
 
 fn main() {
@@ -45,32 +61,34 @@ fn build(app: &Application) {
         .build();
     let entry = gtk::Entry::builder().margin_start(2).margin_end(2).build();
     hbox.append(&entry);
-    let spinner = gtk::Spinner::builder()
-        .margin_start(2)
-        .margin_end(2)
-        .build();
-    spinner.set_visible(false);
-    hbox.append(&spinner);
     let entry_button = Button::builder()
         .label("Connect")
         .margin_start(2)
         .margin_end(2)
         .build();
     let clone = ip.clone();
-    entry_button.connect_clicked(move |_| {
-        spinner.set_visible(true);
-        spinner.start();
+    entry_button.connect_clicked(move |bttn| {
+        let proot = bttn.root().unwrap().downcast::<ApplicationWindow>().unwrap();
+        let parent = Some(&proot);
+        let dialog = connection_load_dialog(parent);
         let text = entry.text();
         let t = text.to_string();
-        if connection_test(&t) {
-            let mut i = clone.lock().unwrap();
-            *i = t;
-            println!("set ip: {}", i);
-        } else {
-            eprintln!("failed to connect to {}", t);
+        let res = connection_test(&t);
+        dialog.destroy();
+        match res {
+            Ok(_) => {
+                let mut i = clone.lock().unwrap();
+                *i = t;
+                println!("set ip: {}", i);
+            }
+            Err(e) => {
+                eprintln!("failed to connect to {}: {}", t, e);
+                // let parent = bttn.parent();
+                
+                let message = e.to_string();
+                connection_error_dialog(parent, message);
+            }
         }
-        spinner.set_visible(false);
-        spinner.stop();
     });
     hbox.append(&entry_button);
     // vbox.append(&hbox);
@@ -280,22 +298,40 @@ fn post(input: SendInput, res: Arc<Mutex<String>>) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
-fn connection_test(ip: &str) -> bool {
-    // let ip = Arc::new(Mutex::new(ip.to_owned()));
-    // let one = post(SendInput::VolumeMute, ip.clone());
-    // let two = post(SendInput::VolumeMute, ip.clone());
+fn connection_test(ip: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let resp = get(ip)?;
+    
+    if resp.is_empty() {
+        return Err(TestError::boxxed("Response is empty"));
+    }
 
-    let one = get(ip);
-    let two = get(ip);
+    let txt = String::from_utf8_lossy(&resp);
 
-    one.is_ok() && two.is_ok()
+    if txt.contains("Roku") {
+        Ok(())
+    } else {
+        Err(TestError::boxxed("Not a Roku device"))
+    }
 }
 
-fn get(ip: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let mut easy = Easy::new();
-    easy.url(&format!("http://{}:8060/query/device-info", ip))?;
-    easy.get(true)?;
-    let trans = easy.transfer();
-    trans.perform()?;
-    Ok(())
+fn get(ip: &str) -> Result<Vec<u8>, Box<dyn std::error::Error>> {
+    let resp = reqwest::blocking::get(format!("http://{}:8060/query/device-info", ip))?.bytes()?;
+    Ok(resp.to_vec())
 }
+
+#[derive(Debug)]
+struct TestError(pub String);
+
+impl TestError {
+    pub fn boxxed<T: ?Sized + ToString>(s: &T) -> Box<Self> {
+        Box::new(Self(s.to_string()))
+    }
+}
+
+impl Display for TestError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.0, f)
+    }
+}
+
+impl std::error::Error for TestError {}
