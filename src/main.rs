@@ -45,6 +45,12 @@ fn build(app: &Application) {
         .build();
     let entry = gtk::Entry::builder().margin_start(2).margin_end(2).build();
     hbox.append(&entry);
+    let spinner = gtk::Spinner::builder()
+        .margin_start(2)
+        .margin_end(2)
+        .build();
+    spinner.set_visible(false);
+    hbox.append(&spinner);
     let entry_button = Button::builder()
         .label("Connect")
         .margin_start(2)
@@ -52,18 +58,19 @@ fn build(app: &Application) {
         .build();
     let clone = ip.clone();
     entry_button.connect_clicked(move |_| {
+        spinner.set_visible(true);
+        spinner.start();
         let text = entry.text();
         let t = text.to_string();
-        let nclone = clone.clone();
-        thread::spawn(move || {
-            if connection_test(&t) {
-                let mut i = nclone.lock().unwrap();
-                *i = t;
-                println!("set ip: {}", i);
-            } else {
-                eprintln!("failed to connect to {}", t);
-            }
-        });
+        if connection_test(&t) {
+            let mut i = clone.lock().unwrap();
+            *i = t;
+            println!("set ip: {}", i);
+        } else {
+            eprintln!("failed to connect to {}", t);
+        }
+        spinner.set_visible(false);
+        spinner.stop();
     });
     hbox.append(&entry_button);
     // vbox.append(&hbox);
@@ -119,34 +126,34 @@ fn build(app: &Application) {
         post!(SendInput::Up, ip);
     }));
     let down_button = gtk::Button::builder()
-    .label("⏷︎")
-    .margin_start(2)
-    .margin_end(2)
-    .build();
+        .label("⏷︎")
+        .margin_start(2)
+        .margin_end(2)
+        .build();
     down_button.connect_clicked(clone!(@weak ip => move |_| {
         post!(SendInput::Down, ip);
     }));
     let left_button = gtk::Button::builder()
-    .label("⏴︎")
-    .margin_start(2)
-    .margin_end(2)
-    .build();
+        .label("⏴︎")
+        .margin_start(2)
+        .margin_end(2)
+        .build();
     left_button.connect_clicked(clone!(@weak ip => move |_| {
         post!(SendInput::Left, ip);
     }));
     let right_button = gtk::Button::builder()
-    .label("⏵︎")
-    .margin_start(2)
-    .margin_end(2)
-    .build();
+        .label("⏵︎")
+        .margin_start(2)
+        .margin_end(2)
+        .build();
     right_button.connect_clicked(clone!(@weak ip => move |_| {
         post!(SendInput::Right, ip);
     }));
     let ok_button = gtk::Button::builder()
-    .label("OK")
-    .margin_start(2)
-    .margin_end(2)
-    .build();
+        .label("OK")
+        .margin_start(2)
+        .margin_end(2)
+        .build();
     ok_button.connect_clicked(clone!(@weak ip => move |_| {
         post!(SendInput::Select, ip);
     }));
@@ -274,9 +281,21 @@ fn post(input: SendInput, res: Arc<Mutex<String>>) -> Result<(), Box<dyn std::er
 }
 
 fn connection_test(ip: &str) -> bool {
-    let ip = Arc::new(Mutex::new(ip.to_owned()));
-    let one = post(SendInput::VolumeMute, ip.clone());
-    let two = post(SendInput::VolumeMute, ip.clone());
+    // let ip = Arc::new(Mutex::new(ip.to_owned()));
+    // let one = post(SendInput::VolumeMute, ip.clone());
+    // let two = post(SendInput::VolumeMute, ip.clone());
+
+    let one = get(ip);
+    let two = get(ip);
 
     one.is_ok() && two.is_ok()
+}
+
+fn get(ip: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let mut easy = Easy::new();
+    easy.url(&format!("http://{}:8060/query/device-info", ip))?;
+    easy.get(true)?;
+    let trans = easy.transfer();
+    trans.perform()?;
+    Ok(())
 }
