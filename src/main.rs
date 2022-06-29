@@ -8,9 +8,9 @@ use libadwaita::prelude::*;
 use curl::easy::Easy;
 use gtk::glib::clone;
 use gtk::glib::GString;
-use libadwaita::Application;
 use gtk::ApplicationWindow;
 use gtk::Button;
+use libadwaita::Application;
 
 const APP_ID: &str = "net.caverym.Rokmu";
 
@@ -34,15 +34,22 @@ fn build(app: &Application) {
     let vbox = gtk::Box::builder()
         .orientation(gtk::Orientation::Vertical)
         .baseline_position(gtk::BaselinePosition::Center)
+        .margin_top(2)
         .build();
 
     let hbox = gtk::Box::builder()
         .orientation(gtk::Orientation::Horizontal)
         .baseline_position(gtk::BaselinePosition::Center)
+        .margin_top(4)
+        .margin_bottom(4)
         .build();
-    let entry = gtk::Entry::new();
+    let entry = gtk::Entry::builder().margin_start(2).margin_end(2).build();
     hbox.append(&entry);
-    let entry_button = Button::with_label("Connect");
+    let entry_button = Button::builder()
+        .label("Connect")
+        .margin_start(2)
+        .margin_end(2)
+        .build();
     let clone = ip.clone();
     entry_button.connect_clicked(move |_| {
         let text = entry.text();
@@ -64,12 +71,18 @@ fn build(app: &Application) {
         .homogeneous(true)
         .build();
     let home_button = gtk::Button::builder()
-    .label("Home")
-    .build();
+        .label("Home")
+        .margin_start(2)
+        .margin_end(2)
+        .build();
     home_button.connect_clicked(clone!(@weak ip => move |_| {
         post!(SendInput::Home, ip);
     }));
-    let back_button = gtk::Button::with_label("Back");
+    let back_button = gtk::Button::builder()
+        .label("Back")
+        .margin_start(2)
+        .margin_end(2)
+        .build();
     back_button.connect_clicked(clone!(@weak ip => move |_| {
         post!(SendInput::Back, ip);
     }));
@@ -78,28 +91,50 @@ fn build(app: &Application) {
     vbox.append(&homebackbox);
 
     let ulordbox = gtk::Grid::builder()
-    .orientation(gtk::Orientation::Vertical)
-    .row_homogeneous(true)
-    .column_homogeneous(true)
-    .build();
+        .orientation(gtk::Orientation::Vertical)
+        .row_homogeneous(true)
+        .column_homogeneous(true)
+        .margin_top(4)
+        .margin_bottom(2)
+        .build();
 
-    let up_button = gtk::Button::with_label("Up");
+    let up_button = gtk::Button::builder()
+        .label("Up")
+        .margin_start(2)
+        .margin_end(2)
+        .build();
     up_button.connect_clicked(clone!(@weak ip => move |_| {
         post!(SendInput::Up, ip);
     }));
-    let down_button = gtk::Button::with_label("Down");
+    let down_button = gtk::Button::builder()
+    .label("Down")
+    .margin_start(2)
+    .margin_end(2)
+    .build();
     down_button.connect_clicked(clone!(@weak ip => move |_| {
         post!(SendInput::Down, ip);
     }));
-    let left_button = gtk::Button::with_label("Left");
+    let left_button = gtk::Button::builder()
+    .label("Left")
+    .margin_start(2)
+    .margin_end(2)
+    .build();
     left_button.connect_clicked(clone!(@weak ip => move |_| {
         post!(SendInput::Left, ip);
     }));
-    let right_button = gtk::Button::with_label("Right");
+    let right_button = gtk::Button::builder()
+    .label("Right")
+    .margin_start(2)
+    .margin_end(2)
+    .build();
     right_button.connect_clicked(clone!(@weak ip => move |_| {
         post!(SendInput::Right, ip);
     }));
-    let ok_button = gtk::Button::with_label("OK");
+    let ok_button = gtk::Button::builder()
+    .label("OK")
+    .margin_start(2)
+    .margin_end(2)
+    .build();
     ok_button.connect_clicked(clone!(@weak ip => move |_| {
         post!(SendInput::Select, ip);
     }));
@@ -113,11 +148,15 @@ fn build(app: &Application) {
     let volmbox = gtk::Box::builder()
         .orientation(gtk::Orientation::Horizontal)
         .homogeneous(true)
+        .margin_top(2)
+        .margin_bottom(4)
+        .margin_start(2)
+        .margin_end(2)
         .build();
     let volbox = gtk::Box::builder()
-    .orientation(gtk::Orientation::Vertical)
-    .homogeneous(true)
-    .build();
+        .orientation(gtk::Orientation::Vertical)
+        .homogeneous(true)
+        .build();
     let vol_up_button = gtk::Button::with_label("Volume Up");
     vol_up_button.connect_clicked(clone!(@weak ip => move |_| {
         post!(SendInput::VolumeUp, ip);
@@ -143,7 +182,7 @@ fn build(app: &Application) {
     let window = ApplicationWindow::builder()
         .application(app)
         .title("Rokmu")
-        .default_width(258)
+        .default_width(266)
         .default_height(251)
         .resizable(false)
         .titlebar(&titlebar)
