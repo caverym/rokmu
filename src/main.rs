@@ -12,6 +12,14 @@ use gtk::ApplicationWindow;
 
 const APP_ID: &str = "net.caverym.Rokmu";
 
+macro_rules! post {
+    ($sb:expr, $ip:expr) => {
+        if let Err(e) = post($sb, $ip) {
+            eprintln!("error: {}", e);
+        }
+    };
+}
+
 fn main() {
     let app = Application::builder().application_id(APP_ID).build();
     app.connect_activate(build);
@@ -39,15 +47,15 @@ fn build(app: &Application) {
     let hshbox = gtk::Box::builder().orientation(gtk::Orientation::Horizontal).build();
     let home_button = gtk::Button::with_label("Home");
     home_button.connect_clicked(clone!(@weak ip => move |_| {
-        post(SendInput::Home, ip);
+        post!(SendInput::Home, ip);
     }));
     let select_button = gtk::Button::with_label("Select");
     select_button.connect_clicked(clone!(@weak ip => move |_| {
-        post(SendInput::Select, ip);
+        post!(SendInput::Select, ip);
     }));
     let back_button = gtk::Button::with_label("Back");
     back_button.connect_clicked(clone!(@weak ip => move |_| {
-        post(SendInput::Back, ip);
+        post!(SendInput::Back, ip);
     }));
     hshbox.append(&home_button);
     hshbox.append(&select_button);
@@ -58,19 +66,19 @@ fn build(app: &Application) {
     let abox = gtk::Box::builder().orientation(gtk::Orientation::Horizontal).build();
     let up_button = gtk::Button::with_label("Up");
     up_button.connect_clicked(clone!(@weak ip => move |_| {
-        post(SendInput::Up, ip);
+        post!(SendInput::Up, ip);
     }));
     let down_button = gtk::Button::with_label("Down");
     down_button.connect_clicked(clone!(@weak ip => move |_| {
-        post(SendInput::Down, ip);
+        post!(SendInput::Down, ip);
     }));
     let left_button = gtk::Button::with_label("Left");
     left_button.connect_clicked(clone!(@weak ip => move |_| {
-        post(SendInput::Left, ip);
+        post!(SendInput::Left, ip);
     }));
     let right_button = gtk::Button::with_label("Right");
     right_button.connect_clicked(clone!(@weak ip => move |_| {
-        post(SendInput::Right, ip);
+        post!(SendInput::Right, ip);
     }));
     abox.append(&up_button);
     abox.append(&down_button);
@@ -81,15 +89,15 @@ fn build(app: &Application) {
     let volbox = gtk::Box::builder().orientation(gtk::Orientation::Horizontal).build();
     let vol_up_button = gtk::Button::with_label("Volume Up");
     vol_up_button.connect_clicked(clone!(@weak ip => move |_| {
-        post(SendInput::VolumeUp, ip);
+        post!(SendInput::VolumeUp, ip);
     }));
     let vol_down_button = gtk::Button::with_label("Volume Down");
     vol_down_button.connect_clicked(clone!(@weak ip => move |_| {
-        post(SendInput::VolumeDown, ip);
+        post!(SendInput::VolumeDown, ip);
     }));
     let mute_button = gtk::Button::with_label("Mute");
     mute_button.connect_clicked(clone!(@weak ip => move |_| {
-        post(SendInput::VolumeMute, ip);
+        post!(SendInput::VolumeMute, ip);
     }));
     volbox.append(&vol_up_button);
     volbox.append(&vol_down_button);
@@ -119,21 +127,20 @@ enum SendInput {
     VolumeMute,
 }
 
-fn post(input: SendInput, res: Rc<Mutex<GString>>) {
+fn post(input: SendInput, res: Rc<Mutex<GString>>) -> Result<(), Box<dyn std::error::Error>> {
     let ip = res.lock().unwrap();
     println!("Sending {:?} to {}", input, ip);
     let data = format!("{:?}", input);
     let mut bytes = data.as_bytes();
 
     let mut easy = Easy::new();
-    easy.url(&format!("http://{}:8060/keypress/{:?}", ip, input))
-        .unwrap();
-    easy.post(true).unwrap();
-    easy.post_field_size(data.len() as u64).unwrap();
+    easy.url(&format!("http://{}:8060/keypress/{:?}", ip, input))?;
+    easy.post(true)?;
+    easy.post_field_size(data.len() as u64)?;
 
     let mut trans = easy.transfer();
     trans
-        .read_function(|buf| Ok(bytes.read(buf).unwrap_or(0)))
-        .unwrap();
-    trans.perform().unwrap();
+        .read_function(|buf| Ok(bytes.read(buf).unwrap_or(0)))?;
+    trans.perform()?;
+    Ok(())
 }
