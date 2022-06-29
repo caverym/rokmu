@@ -65,19 +65,11 @@ fn build(app: &Application) {
     hbox.append(&entry_button);
     // vbox.append(&hbox);
 
-    let homebackbox = gtk::Box::builder()
+    let bihbox = gtk::Box::builder()
         .orientation(gtk::Orientation::Horizontal)
         .baseline_position(gtk::BaselinePosition::Center)
         .homogeneous(true)
         .build();
-    let home_button = gtk::Button::builder()
-        .label("Home")
-        .margin_start(2)
-        .margin_end(2)
-        .build();
-    home_button.connect_clicked(clone!(@weak ip => move |_| {
-        post!(SendInput::Home, ip);
-    }));
     let back_button = gtk::Button::builder()
         .label("Back")
         .margin_start(2)
@@ -86,9 +78,26 @@ fn build(app: &Application) {
     back_button.connect_clicked(clone!(@weak ip => move |_| {
         post!(SendInput::Back, ip);
     }));
-    homebackbox.append(&home_button);
-    homebackbox.append(&back_button);
-    vbox.append(&homebackbox);
+    let info_button = gtk::Button::builder()
+        .label("*")
+        .margin_start(2)
+        .margin_end(2)
+        .build();
+    info_button.connect_clicked(clone!(@weak ip => move |_| {
+        post!(SendInput::Info, ip);
+    }));
+    let home_button = gtk::Button::builder()
+        .label("Home")
+        .margin_start(2)
+        .margin_end(2)
+        .build();
+    home_button.connect_clicked(clone!(@weak ip => move |_| {
+        post!(SendInput::Home, ip);
+    }));
+    bihbox.append(&back_button);
+    bihbox.append(&info_button);
+    bihbox.append(&home_button);
+    vbox.append(&bihbox);
 
     let ulordbox = gtk::Grid::builder()
         .orientation(gtk::Orientation::Vertical)
@@ -99,7 +108,7 @@ fn build(app: &Application) {
         .build();
 
     let up_button = gtk::Button::builder()
-        .label("Up")
+        .label("⏶︎")
         .margin_start(2)
         .margin_end(2)
         .build();
@@ -107,7 +116,7 @@ fn build(app: &Application) {
         post!(SendInput::Up, ip);
     }));
     let down_button = gtk::Button::builder()
-    .label("Down")
+    .label("⏷︎")
     .margin_start(2)
     .margin_end(2)
     .build();
@@ -115,7 +124,7 @@ fn build(app: &Application) {
         post!(SendInput::Down, ip);
     }));
     let left_button = gtk::Button::builder()
-    .label("Left")
+    .label("⏴︎")
     .margin_start(2)
     .margin_end(2)
     .build();
@@ -123,7 +132,7 @@ fn build(app: &Application) {
         post!(SendInput::Left, ip);
     }));
     let right_button = gtk::Button::builder()
-    .label("Right")
+    .label("⏵︎")
     .margin_start(2)
     .margin_end(2)
     .build();
@@ -144,6 +153,40 @@ fn build(app: &Application) {
     ulordbox.attach(&right_button, 2, 1, 1, 1);
     ulordbox.attach(&ok_button, 1, 1, 1, 1);
     vbox.append(&ulordbox);
+
+    let rpfbox = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
+        .baseline_position(gtk::BaselinePosition::Center)
+        .homogeneous(true)
+        .build();
+    let rew_button = gtk::Button::builder()
+        .label("⏪︎")
+        .margin_start(2)
+        .margin_end(2)
+        .build();
+    rew_button.connect_clicked(clone!(@weak ip => move |_| {
+        post!(SendInput::Rew, ip);
+    }));
+    let pp_button = gtk::Button::builder()
+        .label("⏯︎")
+        .margin_start(2)
+        .margin_end(2)
+        .build();
+    pp_button.connect_clicked(clone!(@weak ip => move |_| {
+        post!(SendInput::Play, ip);
+    }));
+    let fwd_button = gtk::Button::builder()
+        .label("⏩︎")
+        .margin_start(2)
+        .margin_end(2)
+        .build();
+    fwd_button.connect_clicked(clone!(@weak ip => move |_| {
+        post!(SendInput::Fwd, ip);
+    }));
+    rpfbox.append(&rew_button);
+    rpfbox.append(&pp_button);
+    rpfbox.append(&fwd_button);
+    vbox.append(&rpfbox);
 
     let volmbox = gtk::Box::builder()
         .orientation(gtk::Orientation::Horizontal)
@@ -193,13 +236,17 @@ fn build(app: &Application) {
 
 #[derive(Debug)]
 enum SendInput {
+    Back,
+    Info,
     Home,
     Select,
-    Back,
     Up,
     Down,
     Left,
     Right,
+    Rew,
+    Play,
+    Fwd,
     VolumeUp,
     VolumeDown,
     VolumeMute,
