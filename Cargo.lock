@@ -627,6 +627,7 @@ name = "rokmu"
 version = "0.1.0"
 dependencies = [
  "curl",
+ "gdk4",
  "glib",
  "gtk4",
  "libadwaita",

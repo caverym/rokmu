@@ -1,7 +1,10 @@
 use gtk4 as gtk;
+use gdk4 as gdk;
 use std::io::Read;
 use std::rc::Rc;
+use std::sync::Arc;
 use std::sync::Mutex;
+use std::thread;
 // use gtk::prelude::*;
 use libadwaita::prelude::*;
 
@@ -29,7 +32,7 @@ fn main() {
 }
 
 fn build(app: &Application) {
-    let ip = Rc::new(Mutex::new(GString::from("")));
+    let ip = Arc::new(Mutex::new(String::new()));
 
     let vbox = gtk::Box::builder()
         .orientation(gtk::Orientation::Vertical)
@@ -53,14 +56,17 @@ fn build(app: &Application) {
     let clone = ip.clone();
     entry_button.connect_clicked(move |_| {
         let text = entry.text();
-
-        if connection_test(&text) {
-            let mut i = clone.lock().unwrap();
-            *i = entry.text();
-            println!("set ip: {}", i);
-        } else {
-            eprintln!("failed to connect to {}", text);
-        }
+        let t = text.to_string();
+        let nclone = clone.clone();
+        thread::spawn(move || {
+            if connection_test(&t) {
+                let mut i = nclone.lock().unwrap();
+                *i = t;
+                println!("set ip: {}", i);
+            } else {
+                eprintln!("failed to connect to {}", t);
+            }
+        });
     });
     hbox.append(&entry_button);
     // vbox.append(&hbox);
@@ -188,6 +194,7 @@ fn build(app: &Application) {
         .titlebar(&titlebar)
         .child(&vbox)
         .build();
+
     window.present();
 }
 
@@ -205,7 +212,7 @@ enum SendInput {
     VolumeMute,
 }
 
-fn post(input: SendInput, res: Rc<Mutex<GString>>) -> Result<(), Box<dyn std::error::Error>> {
+fn post(input: SendInput, res: Arc<Mutex<String>>) -> Result<(), Box<dyn std::error::Error>> {
     let ip = res.lock().unwrap();
     println!("Sending {:?} to {}", input, ip);
     let data = format!("{:?}", input);
@@ -222,8 +229,8 @@ fn post(input: SendInput, res: Rc<Mutex<GString>>) -> Result<(), Box<dyn std::er
     Ok(())
 }
 
-fn connection_test(ip: &GString) -> bool {
-    let ip = Rc::new(Mutex::new(ip.to_owned()));
+fn connection_test(ip: &str) -> bool {
+    let ip = Arc::new(Mutex::new(ip.to_owned()));
     let one = post(SendInput::VolumeMute, ip.clone());
     let two = post(SendInput::VolumeMute, ip.clone());
 
