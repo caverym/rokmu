@@ -35,6 +35,19 @@ fn connection_load_dialog(parent: Option<&impl IsA<Window>>) -> MessageDialog {
     dialog
 }
 
+fn about_dialog(parent: Option<&impl IsA<Window>>, app: &impl IsA<gtk::Application>) {
+    let dialog = gtk::AboutDialog::builder()
+    .application(app)
+    .program_name("Rokmu")
+    .authors(vec!["Avery Murray".to_string(), "Ben Westover".to_string()])
+    .copyright("© 2022 Avery Murray")
+    .decorated(true)
+    .version(env!("CARGO_PKG_VERSION"))
+    .build();
+
+    dialog.present();
+}
+
 fn main() {
     let app = Application::builder().application_id(APP_ID).build();
     app.connect_activate(build);
@@ -88,6 +101,25 @@ fn build(app: &Application) {
         }
     });
     hbox.append(&entry_button);
+
+    let about_button = gtk::Button::with_label("About");
+
+    about_button.connect_clicked(|button| {
+        let proot = button.root().unwrap().downcast::<ApplicationWindow>().unwrap();
+        let app = proot.application().unwrap();
+        let parent = Some(&proot);
+        about_dialog(parent, &app);
+    });
+
+    let popover = gtk::PopoverMenu::builder()
+    .child(&about_button)
+    .build();
+
+    let menubutton = gtk::MenuButton::builder()
+    .popover(&popover)
+    .build();
+
+    hbox.append(&menubutton);
     // vbox.append(&hbox);
 
     let bihbox = gtk::Box::builder()
@@ -250,7 +282,7 @@ fn build(app: &Application) {
     let window = ApplicationWindow::builder()
         .application(app)
         .title("Rokmu")
-        .default_width(266)
+        .default_width(302)
         .default_height(251)
         .resizable(false)
         .titlebar(&titlebar)
