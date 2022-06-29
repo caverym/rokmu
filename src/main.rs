@@ -1,7 +1,5 @@
 use gtk4 as gtk;
-use gdk4 as gdk;
 use std::io::Read;
-use std::rc::Rc;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::thread;
@@ -10,7 +8,6 @@ use libadwaita::prelude::*;
 
 use curl::easy::Easy;
 use gtk::glib::clone;
-use gtk::glib::GString;
 use gtk::ApplicationWindow;
 use gtk::Button;
 use libadwaita::Application;
