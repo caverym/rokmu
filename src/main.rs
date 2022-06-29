@@ -26,14 +26,11 @@ macro_rules! post {
 
 fn connection_error_dialog(parent: Option<&impl IsA<Window>>, error: String) {
     let dialog = gtk::MessageDialog::new(parent, gtk::DialogFlags::MODAL, gtk::MessageType::Error, gtk::ButtonsType::None, &error);
-    // dialog.connect("response", true, clone!(@strong dialog => move |_| { dialog.destroy(); None }));
     dialog.present();
-    // dialog.destroy();
 }
 
 fn connection_load_dialog(parent: Option<&impl IsA<Window>>) -> MessageDialog {
-    let dialog = gtk::MessageDialog::new(parent, gtk::DialogFlags::MODAL, gtk::MessageType::Info, gtk::ButtonsType::None, "Loading...");
-    // dialog.connect("response", true, clone!(@strong dialog => move |_| { dialog.destroy(); None }));
+    let dialog = gtk::MessageDialog::new(parent, gtk::DialogFlags::DESTROY_WITH_PARENT, gtk::MessageType::Info, gtk::ButtonsType::None, "Loading...");
     dialog.present();
     dialog
 }
