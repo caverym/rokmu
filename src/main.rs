@@ -35,7 +35,7 @@ fn connection_load_dialog(parent: Option<&impl IsA<Window>>) -> MessageDialog {
     dialog
 }
 
-fn about_dialog(parent: Option<&impl IsA<Window>>, app: &impl IsA<gtk::Application>) {
+fn about_dialog(_: Option<&impl IsA<Window>>, app: &impl IsA<gtk::Application>) {
     let dialog = gtk::AboutDialog::builder()
     .application(app)
     .program_name("Rokmu")
@@ -102,7 +102,7 @@ fn build(app: &Application) {
     });
     hbox.append(&entry_button);
 
-    let about_button = gtk::Button::with_label("About");
+    /*let about_button = gtk::Button::with_label("About");
 
     about_button.connect_clicked(|button| {
         let proot = button.root().unwrap().downcast::<ApplicationWindow>().unwrap();
@@ -119,7 +119,7 @@ fn build(app: &Application) {
     .popover(&popover)
     .build();
 
-    hbox.append(&menubutton);
+    hbox.append(&menubutton);*/
     // vbox.append(&hbox);
 
     let bihbox = gtk::Box::builder()
